@@ -150,7 +150,7 @@ class CwaService @Inject constructor(
         // UV Index monitoring is only available at 29 stations (out of 700+),
         // and not available in the main weather API call.
         // Therefore we will call a different endpoint,
-        // but we must specific the station ID rather than using lat/lon.
+        // but we must specify the station ID rather than using lat/lon.
         var station: String? = null
         station = getNearestStation(location, CWA_UV_STATIONS)
         val uv = if (station != null) {
@@ -169,7 +169,7 @@ class CwaService @Inject constructor(
         // Temperature normals are only available at 26 stations (out of 700+),
         // and not available in the main weather API call.
         // Therefore we will call a different endpoint,
-        // but we must specific the station ID rather than using lat/lon.
+        // but we must specify the station ID rather than using lat/lon.
         station = getNearestStation(location, CWA_NORMALS_STATIONS)
         val normals = if (!ignoreFeatures.contains(SecondaryWeatherSourceFeature.FEATURE_NORMALS) && station != null) {
             mApi.getNormals(
@@ -294,7 +294,7 @@ class CwaService @Inject constructor(
         // Temperature normals are only available at 26 stations (out of 700+),
         // and not available in the main weather API call.
         // Therefore we will call a different endpoint,
-        // but we must specific the station ID rather than using lat/lon.
+        // but we must specify the station ID rather than using lat/lon.
         val station = getNearestStation(location, CWA_NORMALS_STATIONS)
         val now = Calendar.getInstance(TimeZone.getTimeZone("Asia/Taipei"), Locale.ENGLISH)
         val normals = if (requestedFeatures.contains(SecondaryWeatherSourceFeature.FEATURE_NORMALS) && station != null) {

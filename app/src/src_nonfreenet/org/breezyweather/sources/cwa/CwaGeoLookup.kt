@@ -45,6 +45,9 @@ fun getNearestStation(location: Location, stationList: Map<String, Map<String, D
 // They are not available from the main weather API call,
 // and must be called with a different endpoint with the exact station ID.
 // This list allows matching a location to the nearest of those 26 stations.
+//
+// Source (last checked 2024-05-29):
+// https://opendata.cwa.gov.tw/dataset/climate/C-B0027-001
 val CWA_NORMALS_STATIONS = mapOf<String, Map<String, Double>>(
     "466900" to mapOf("lat" to 25.164888, "lon" to 121.448906),
     "466920" to mapOf("lat" to 25.037659, "lon" to 121.514854),
@@ -78,6 +81,9 @@ val CWA_NORMALS_STATIONS = mapOf<String, Map<String, Double>>(
 // They are not available from the main weather API call,
 // and must be called with a different endpoint with the exact station ID.
 // This list allows matching a location to the nearest of those 29 stations.
+//
+// Source (last checked 2024-05-29):
+// https://opendata.cwa.gov.tw/dataset/observation/O-A0003-001
 val CWA_UV_STATIONS = mapOf<String, Map<String, Double>>(
     "466940" to mapOf("lat" to 25.133314, "lon" to 121.74048),
     "466900" to mapOf("lat" to 25.164888, "lon" to 121.448906),
