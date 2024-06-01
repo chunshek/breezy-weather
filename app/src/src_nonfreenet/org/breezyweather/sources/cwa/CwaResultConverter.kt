@@ -480,10 +480,10 @@ private fun getHourlyForecast(
 
 // CWA issues warnings primarily for counties,
 // but also for specific areas in each county:
-//  • Mountain ("M"): 59 townships
-//  • Keelung North Coast ("K"): 15 townships
-//  • Hengchun Peninsula ("H"): 6 townships
-//  • Lanyu and Ludao ("L"): 2 townships
+//  • 山區 Mountain ("M"): 59 townships
+//  • 基隆北海岸 Keelung North Coast ("K"): 15 townships
+//  • 恆春半島 Hengchun Peninsula ("H"): 6 townships
+//  • 蘭嶼綠島 Lanyu and Ludao ("L"): 2 townships
 // These specifications are stored in CWA_TOWNSHIP_WARNING_AREAS.
 private fun getAlertList(
     alertResult: CwaAlertResult,
