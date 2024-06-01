@@ -205,14 +205,15 @@ class CwaService @Inject constructor(
                 moonResult: CwaAstroResult
             ->
             convert(
-                weatherResult,
-                uvResult,
-                normalsResult,
-                alertResult,
-                sunResult,
-                moonResult,
-                location,
-                id
+                weatherResult = weatherResult,
+                uvResult = uvResult,
+                normalsResult = normalsResult,
+                alertResult = alertResult,
+                sunResult = sunResult,
+                moonResult = moonResult,
+                location = location,
+                id = id,
+                ignoreFeatures = ignoreFeatures
             )
         }
     }

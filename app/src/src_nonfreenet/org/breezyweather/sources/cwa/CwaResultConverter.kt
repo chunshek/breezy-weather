@@ -36,6 +36,7 @@ import breezyweather.domain.weather.wrappers.HourlyWrapper
 import breezyweather.domain.weather.wrappers.SecondaryWeatherWrapper
 import breezyweather.domain.weather.wrappers.WeatherWrapper
 import org.breezyweather.common.exceptions.InvalidLocationException
+import org.breezyweather.common.source.SecondaryWeatherSourceFeature
 import org.breezyweather.sources.cwa.json.CwaAlertResult
 import org.breezyweather.sources.cwa.json.CwaAstroResult
 import org.breezyweather.sources.cwa.json.CwaLocationTown
@@ -69,14 +70,15 @@ fun convert(
     sunResult: CwaAstroResult,
     moonResult: CwaAstroResult,
     location: Location,
-    id: String
+    id: String,
+    ignoreFeatures: List<SecondaryWeatherSourceFeature>
 ): WeatherWrapper {
     return WeatherWrapper(
-        current = getCurrent(weatherResult, uvResult),
-        normals = getNormals(normalsResult),
+        current = getCurrent(weatherResult, uvResult, ignoreFeatures),
+        normals = if (!ignoreFeatures.contains(SecondaryWeatherSourceFeature.FEATURE_NORMALS)) getNormals(normalsResult) else null,
         dailyForecast = getDailyForecast(weatherResult.data!!.aqi[0].town!!.daily, sunResult, moonResult),
         hourlyForecast = getHourlyForecast(weatherResult.data!!.aqi[0].town!!.hourly),
-        alertList = getAlertList(alertResult, location, id)
+        alertList = if (!ignoreFeatures.contains(SecondaryWeatherSourceFeature.FEATURE_ALERT)) getAlertList(alertResult, location, id) else null
     )
 }
 
@@ -96,7 +98,8 @@ fun convertSecondary(
 
 private fun getCurrent(
     weatherResult: CwaWeatherResult,
-    uvResult: CwaUvResult
+    uvResult: CwaUvResult,
+    ignoreFeatures: List<SecondaryWeatherSourceFeature>
 ): Current {
     var weatherText: String? = null
     var weatherCode: WeatherCode? = null
@@ -128,7 +131,7 @@ private fun getCurrent(
     // We need to decipher the best code to use based on the text.
     // First we check for precipitation, thunder, and fog conditions.
     if (weatherText != null) {
-        if (weatherText!!.endsWith("有霾")) weatherCode = WeatherCode.FOG
+        if (weatherText!!.endsWith("有霾")) weatherCode = WeatherCode.HAZE
         if (weatherText!!.endsWith("有靄")) weatherCode = WeatherCode.FOG
         if (weatherText!!.endsWith("有閃電")) weatherCode = WeatherCode.THUNDER
         if (weatherText!!.endsWith("有雷聲")) weatherCode = WeatherCode.THUNDER
@@ -179,7 +182,7 @@ private fun getCurrent(
         )
     }
 
-    airQuality = getAirQuality(weatherResult)
+    airQuality = if (!ignoreFeatures.contains(SecondaryWeatherSourceFeature.FEATURE_AIR_QUALITY)) getAirQuality(weatherResult) else null
 
     return Current(
         weatherText = weatherText,
@@ -196,11 +199,11 @@ private fun getCurrent(
 private fun getNormals(
     normalsResult: CwaNormalsResult
 ): Normals {
-    return Normals(
-        month = normalsResult.records!!.data.surfaceObs.location[0].stationObsStatistics.AirTemperature.monthly[0].Month.toInt(),
-        daytimeTemperature = normalsResult.records!!.data.surfaceObs.location[0].stationObsStatistics.AirTemperature.monthly[0].Maximum.toDouble(),
-        nighttimeTemperature = normalsResult.records!!.data.surfaceObs.location[0].stationObsStatistics.AirTemperature.monthly[0].Minimum.toDouble()
-    )
+    return if (normalsResult.records != null) Normals(
+        month = normalsResult.records.data.surfaceObs.location[0].stationObsStatistics.AirTemperature.monthly[0].Month.toInt(),
+        daytimeTemperature = normalsResult.records.data.surfaceObs.location[0].stationObsStatistics.AirTemperature.monthly[0].Maximum.toDouble(),
+        nighttimeTemperature = normalsResult.records.data.surfaceObs.location[0].stationObsStatistics.AirTemperature.monthly[0].Minimum.toDouble()
+    ) else Normals()
 }
 
 // Concentrations of SO₂, NO₂, O₃ are given in ppb (and in ppm for CO).
@@ -208,14 +211,14 @@ private fun getNormals(
 private fun getAirQuality(
     result: CwaWeatherResult
 ): AirQuality {
-    return AirQuality(
-        pM25 = result.data!!.aqi[0].pm2_5.toDoubleOrNull(),
-        pM10 = result.data!!.aqi[0].pm10.toDoubleOrNull(),
-        sO2 = ppbToUgm3("SO2", result.data!!.aqi[0].so2.toDoubleOrNull()),
-        nO2 = ppbToUgm3("NO2", result.data!!.aqi[0].no2.toDoubleOrNull()),
-        o3 = ppbToUgm3("O3", result.data!!.aqi[0].o3.toDoubleOrNull()),
-        cO = ppbToUgm3("CO", result.data!!.aqi[0].co.toDoubleOrNull())
-    )
+    return if (result.data != null) AirQuality(
+        pM25 = result.data.aqi[0].pm2_5.toDoubleOrNull(),
+        pM10 = result.data.aqi[0].pm10.toDoubleOrNull(),
+        sO2 = ppbToUgm3("SO2", result.data.aqi[0].so2.toDoubleOrNull()),
+        nO2 = ppbToUgm3("NO2", result.data.aqi[0].no2.toDoubleOrNull()),
+        o3 = ppbToUgm3("O3", result.data.aqi[0].o3.toDoubleOrNull()),
+        cO = ppbToUgm3("CO", result.data.aqi[0].co.toDoubleOrNull())
+    ) else AirQuality()
 }
 
 // Forecast data from the main weather API call are unsorted.
@@ -509,33 +512,35 @@ private fun getAlertList(
 
     val warningArea = CWA_TOWNSHIP_WARNING_AREAS.getOrDefault(township, "G")
 
-    alertResult.records!!.record?.forEach { record ->
-        applicable = false
-        record.hazardConditions?.hazards?.hazard?.forEach { hazard ->
-            hazard.info.affectedAreas.location.forEach { location ->
-                if (
-                    (location.locationName == county)
-                    || (location.locationName == county + "山區" && warningArea == "M")
-                    || (location.locationName == "基隆北海岸" && warningArea == "K")
-                    || (location.locationName == "恆春半島" && warningArea == "H")
-                    || (location.locationName == "蘭嶼綠島" && warningArea == "L")
-                ) {
-                    if (!applicable) { // so we don't cover up a more severe level with a less severe one
-                        applicable = true
-                        headline = hazard.info.phenomena + hazard.info.significance
-                        severity = getAlertSeverity(headline)
-                        alert = Alert(
-                            alertId = headline + " " + record.datasetInfo.validTime.startTime,
-                            startDate = formatter.parse(record.datasetInfo.validTime.startTime)!!,
-                            endDate = formatter.parse(record.datasetInfo.validTime.endTime)!!,
-                            headline = headline,
-                            description = record.contents.content.contentText.trim(),
-                            instruction = null,
-                            source = "中央氣象署",
-                            severity = severity,
-                            color = getAlertColor(headline, severity)
-                        )
-                        alertList.add(alert)
+    if (alertResult.records != null) {
+        alertResult.records.record?.forEach { record ->
+            applicable = false
+            record.hazardConditions?.hazards?.hazard?.forEach { hazard ->
+                hazard.info.affectedAreas.location.forEach { location ->
+                    if (
+                        (location.locationName == county)
+                        || (location.locationName == county + "山區" && warningArea == "M")
+                        || (location.locationName == "基隆北海岸" && warningArea == "K")
+                        || (location.locationName == "恆春半島" && warningArea == "H")
+                        || (location.locationName == "蘭嶼綠島" && warningArea == "L")
+                    ) {
+                        if (!applicable) { // so we don't cover up a more severe level with a less severe one
+                            applicable = true
+                            headline = hazard.info.phenomena + hazard.info.significance
+                            severity = getAlertSeverity(headline)
+                            alert = Alert(
+                                alertId = headline + " " + record.datasetInfo.validTime.startTime,
+                                startDate = formatter.parse(record.datasetInfo.validTime.startTime)!!,
+                                endDate = formatter.parse(record.datasetInfo.validTime.endTime)!!,
+                                headline = headline,
+                                description = record.contents.content.contentText.trim(),
+                                instruction = null,
+                                source = "中央氣象署",
+                                severity = severity,
+                                color = getAlertColor(headline, severity)
+                            )
+                            alertList.add(alert)
+                        }
                     }
                 }
             }
