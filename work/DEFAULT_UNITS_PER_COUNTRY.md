@@ -264,3 +264,14 @@ This will help putting the correct default units for every country *and* territo
 | ZA   | South Africa                                 |       |                       |      |       |       |              |              |
 | ZM   | Zambia                                       |       |                       |      |       |       |              |              |
 | ZW   | Zimbabwe                                     |       |                       |      |       |       |              |              |
+
+## WMO recommendations
+
+* Temperature: °C or K
+* Pressure: hPa
+* Relative humidity: %
+* Wind speed: m/s or kn
+* Wind direction: °
+*
+
+Per WHO’s [Guide to Instruments and Methods of Observation: Volume I](https://library.wmo.int/records/item/68695-guide-to-instruments-and-methods-of-observation)
