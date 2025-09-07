@@ -119,6 +119,7 @@ import org.breezyweather.sources.recosante.RecosanteService
 import org.breezyweather.sources.smg.SmgService
 import org.breezyweather.sources.smhi.SmhiService
 import org.breezyweather.sources.veduris.VedurIsService
+import org.breezyweather.sources.weatherapi.WeatherApiService
 import org.breezyweather.sources.wmosevereweather.WmoSevereWeatherService
 import java.text.Collator
 import javax.inject.Inject
@@ -203,6 +204,7 @@ class SourceManager @Inject constructor(
     smhiService: SmhiService,
     ssmsService: SsmsService,
     vedurIsService: VedurIsService,
+    weatherApiService: WeatherApiService,
     wmoSevereWeatherService: WmoSevereWeatherService,
 ) {
     // Location sources
@@ -235,6 +237,7 @@ class SourceManager @Inject constructor(
         nceiService,
         openWeatherService,
         pirateWeatherService,
+        weatherApiService,
         wmoSevereWeatherService
     )
 
