@@ -303,6 +303,11 @@ android {
         )
         it.buildConfigField(
             "String",
+            "TOMORROW_IO_KEY",
+            "\"${properties.getProperty("breezy.tomorrowio.key") ?: ""}\""
+        )
+        it.buildConfigField(
+            "String",
             "MET_OFFICE_KEY",
             "\"${localProperties.getProperty("breezy.metoffice.key") ?: ""}\""
         )

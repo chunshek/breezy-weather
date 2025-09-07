@@ -35,10 +35,10 @@ import kotlin.math.roundToLong
  * Source: https://www.engineeringtoolbox.com/ice-thermal-properties-d_576.html
  */
 fun computeTotalPrecipitation(
-    temperature: Temperature?,
-    rain: Precipitation?,
-    snow: Precipitation?,
-    ice: Precipitation?,
+    temperature: Temperature? = null,
+    rain: Precipitation? = null,
+    snow: Precipitation? = null,
+    ice: Precipitation? = null,
 ): Precipitation? {
     if (rain == null && snow == null && ice == null) return null
     val snowEquivalent = snow?.value?.div(computeSnowToLiquidRatio(temperature))?.roundToLong()
